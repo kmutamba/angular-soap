@@ -198,9 +198,14 @@ SOAPClient._onSendSoapRequest = function(method, async, callback, wsdl, req)
 	var o = null;
 	
 	var nd;
+
+	nd = SOAPClient._getElementsByTagName(req.responseXML, method + "Result");
+	if(nd.length == 0)
+		nd = SOAPClient._getElementsByTagName(req.responseXML, "return");	// PHP web Service?
+		
 	SOAPClient.responseHandlers.forEach(function(handler){
 		// Get the expected response name from this handler:
-		var expectedResponseName = handler(method);
+	var expectedResponseName = handler(method);
 		
 		// Search for any response with that name:
 	 nd = SOAPClient._getElementsByTagName(req.responseXML, expectedResponseName);
@@ -211,10 +216,6 @@ SOAPClient._onSendSoapRequest = function(method, async, callback, wsdl, req)
 		return;
 	}	
 	});
-	
-	nd = SOAPClient._getElementsByTagName(req.responseXML, method + "Result");
-	if(nd.length == 0)
-		nd = SOAPClient._getElementsByTagName(req.responseXML, "return");	// PHP web Service?
 	if(nd.length == 0)
 	{
 		if(req.responseXML.getElementsByTagName("faultcode").length > 0)
