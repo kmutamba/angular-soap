@@ -112,6 +112,7 @@ function SOAPClient() {}
 
 SOAPClient.username = null;
 SOAPClient.password = null;
+SOAPClient.responseHandlers = [];
 
 SOAPClient.invoke = function(url, method, parameters, async, callback)
 {
@@ -195,7 +196,23 @@ SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback,
 SOAPClient._onSendSoapRequest = function(method, async, callback, wsdl, req) 
 {
 	var o = null;
-	var nd = SOAPClient._getElementsByTagName(req.responseXML, method + "Result");
+	
+	var nd;
+	SOAPClient.responseHandlers.forEach(function(handler){
+		// Get the expected response name from this handler:
+		var expectedResponseName = handler(method);
+		
+		// Search for any response with that name:
+	 nd = SOAPClient._getElementsByTagName(req.responseXML, expectedResponseName);
+	if(nd.length != 0)
+	{
+		// We found the expected response.
+		// Break out early:
+		return;
+	}	
+	});
+	
+	nd = SOAPClient._getElementsByTagName(req.responseXML, method + "Result");
 	if(nd.length == 0)
 		nd = SOAPClient._getElementsByTagName(req.responseXML, "return");	// PHP web Service?
 	if(nd.length == 0)
@@ -206,6 +223,11 @@ SOAPClient._onSendSoapRequest = function(method, async, callback, wsdl, req)
 		        o = new Error(500, req.responseXML.getElementsByTagName("faultstring")[0].childNodes[0].nodeValue);
 			else
 			    throw new Error(500, req.responseXML.getElementsByTagName("faultstring")[0].childNodes[0].nodeValue);			
+		}
+		//otherwise we have no configuration for the service specified
+		else
+		{
+			throw new Error(500,"There is no configuration to allow getting elements by tag name for : " + method);
 		}
 	}
 	else
