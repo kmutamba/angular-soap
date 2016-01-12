@@ -27,6 +27,10 @@ angular.module('angularSoap', [])
 		setCredentials: function(username, password){
 			SOAPClient.username = username;
 			SOAPClient.password = password;
+		},
+		addResponseHandler : function(responseCallBack)
+		{
+			SOAPClient.responseHandlers.push(responseCallBack);
 		}
 	}
 }]);
